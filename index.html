@@ -6,18 +6,18 @@
     <title>Paper Counter</title>
     <style>
         :root {
-            --bg-color: #1a1a1a;
-            --card-bg: #2d2d2d;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
             --text-color: #ffffff;
             --primary-color: #4CAF50;
             --secondary-color: #ff9800;
-            --border-color: #404040;
-            --input-bg: #333333;
+            --border-color: #333333;
+            --input-bg: #2d2d2d;
         }
         
         body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 400px;
             margin: 0 auto;
             padding: 20px;
             background-color: var(--bg-color);
@@ -27,27 +27,31 @@
         .container {
             background-color: var(--card-bg);
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 20px;
         }
         
         .center-input {
-            width: calc(100% - 30px);
-            padding: 12px;
-            margin: 10px 0;
+            width: 120px;
+            padding: 8px 12px;
             border: 1px solid var(--border-color);
-            border-radius: 5px;
-            font-size: 18px;
+            border-radius: 6px;
+            font-size: 16px;
             background-color: var(--input-bg);
             color: var(--text-color);
         }
         
         .button {
-            width: 100%;
-            padding: 12px;
-            margin: 5px 0;
+            padding: 8px 16px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 16px;
             cursor: pointer;
             color: white;
@@ -60,45 +64,48 @@
         
         .primary-button {
             background-color: var(--primary-color);
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
         }
         
         .secondary-button {
             background-color: var(--secondary-color);
-        }
-        
-        .export-button {
-            background-color: #2196F3;
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
         }
         
         .count-display {
             text-align: center;
-            font-size: 48px;
+            font-size: 64px;
             margin: 20px 0;
             font-weight: bold;
             color: var(--primary-color);
+            font-variant-numeric: tabular-nums;
         }
         
-        .center-header {
-            font-size: 18px;
-            margin: 10px 0;
+        .center-label {
             color: #888;
+            font-size: 14px;
+            margin-bottom: 4px;
         }
         
         .tabs {
             display: flex;
             margin-bottom: 20px;
             background-color: var(--input-bg);
-            border-radius: 5px;
+            border-radius: 6px;
             padding: 3px;
         }
         
         .tab {
             flex: 1;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
             cursor: pointer;
-            border-radius: 3px;
-            transition: background-color 0.3s;
+            border-radius: 4px;
+            font-size: 14px;
         }
         
         .tab.active {
@@ -114,89 +121,58 @@
             display: block;
         }
         
-        .summary {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: var(--input-bg);
-            border-radius: 5px;
-        }
-        
-        .backup-restore {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: var(--input-bg);
-            border-radius: 5px;
-        }
-        
-        #backupFile {
-            margin: 10px 0;
-            color: var(--text-color);
-        }
-        
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
+            font-size: 14px;
         }
         
         th, td {
-            padding: 12px;
+            padding: 8px 12px;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
         }
         
-        th {
-            background-color: var(--input-bg);
-            color: var(--text-color);
+        .new-center-button {
+            background-color: var(--primary-color);
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Paper Counter</h1>
-        
         <div class="tabs">
             <div class="tab active" onclick="switchTab('counter')">Counter</div>
             <div class="tab" onclick="switchTab('summary')">Summary</div>
-            <div class="tab" onclick="switchTab('data')">Data</div>
         </div>
 
         <div id="counter" class="tab-content active">
-            <div class="center-header">Center Number</div>
-            <input type="number" 
-                   id="centerNumber" 
-                   class="center-input" 
-                   placeholder="Enter center number"
-                   pattern="[0-9]*"
-                   inputmode="numeric">
+            <div class="input-group">
+                <div>
+                    <div class="center-label">Center #</div>
+                    <input type="number" 
+                           id="centerNumber" 
+                           class="center-input" 
+                           placeholder="000"
+                           pattern="[0-9]*"
+                           inputmode="numeric">
+                </div>
+            </div>
             
             <div id="activeCounter">
                 <div class="count-display" id="currentCount">0</div>
-                <button class="button primary-button" onclick="incrementCount()">Count Paper (+1)</button>
-                <button class="button secondary-button" onclick="undoCount()">Undo (-1)</button>
-                <button class="button primary-button" onclick="submitAndNew()" style="margin-top: 20px;">Submit & New Center</button>
+                <button class="primary-button" onclick="incrementCount()">Count Paper (+1)</button>
+                <button class="secondary-button" onclick="undoCount()">Undo (-1)</button>
+                <button class="new-center-button" onclick="submitAndNew()">SUBMIT & NEW CENTER</button>
             </div>
         </div>
 
         <div id="summary" class="tab-content">
-            <h2>Today's Summary</h2>
-            <div id="todaySummary" class="summary"></div>
-        </div>
-
-        <div id="data" class="tab-content">
-            <h2>Data Management</h2>
-            
-            <div class="backup-restore">
-                <h3>Export Data</h3>
-                <button class="button export-button" onclick="exportToCSV()">Download as CSV</button>
-                <button class="button export-button" onclick="exportBackup()">Download Backup</button>
-            </div>
-
-            <div class="backup-restore">
-                <h3>Restore Data</h3>
-                <input type="file" id="backupFile" accept=".json">
-                <button class="button primary-button" onclick="restoreBackup()">Restore from Backup</button>
-            </div>
+            <div id="todaySummary"></div>
         </div>
     </div>
 
@@ -231,12 +207,10 @@
             const today = new Date().toISOString().split('T')[0];
             if (!counts[today]) counts[today] = {};
             
-            // Add to any existing count for this center today
             counts[today][centerNumber] = (counts[today][centerNumber] || 0) + currentCount;
             
             localStorage.setItem('paperCounts', JSON.stringify(counts));
             
-            // Reset for new entry
             currentCount = 0;
             document.getElementById('centerNumber').value = '';
             document.getElementById('centerNumber').focus();
@@ -260,63 +234,11 @@
             
             document.getElementById('todaySummary').innerHTML = `
                 <div style="margin-bottom: 15px">
-                    <strong>Total papers marked today:</strong> ${totalPapers}<br>
-                    <strong>Centers marked:</strong> ${Object.keys(todayCounts).length}
+                    <strong>Total papers:</strong> ${totalPapers}<br>
+                    <strong>Centers:</strong> ${Object.keys(todayCounts).length}
                 </div>
                 ${tableHtml}
             `;
-        }
-
-        function exportToCSV() {
-            let csvContent = "Date,Center,Papers Marked\n";
-            
-            for (const date in counts) {
-                for (const center in counts[date]) {
-                    csvContent += `${date},${center},${counts[date][center]}\n`;
-                }
-            }
-            
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `paper-count-${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        }
-
-        function exportBackup() {
-            const backup = JSON.stringify(counts, null, 2);
-            const blob = new Blob([backup], { type: 'application/json' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `paper-count-backup-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        }
-
-        function restoreBackup() {
-            const fileInput = document.getElementById('backupFile');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                alert('Please select a backup file first');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    counts = JSON.parse(e.target.result);
-                    localStorage.setItem('paperCounts', JSON.stringify(counts));
-                    alert('Backup restored successfully!');
-                    updateSummary();
-                } catch (error) {
-                    alert('Error restoring backup. Please make sure the file is valid.');
-                }
-            };
-            reader.readAsText(file);
         }
 
         function switchTab(tabId) {
@@ -327,14 +249,15 @@
                 tab.classList.remove('active');
             });
             document.getElementById(tabId).classList.add('active');
-            document.querySelector(`.tab:nth-child(${
-                tabId === 'counter' ? 1 : tabId === 'summary' ? 2 : 3
-            })`).classList.add('active');
+            document.querySelector(`.tab:nth-child(${tabId === 'counter' ? 1 : 2})`).classList.add('active');
             
             if (tabId === 'summary') {
                 updateSummary();
             }
         }
+
+        // Set focus to center number input on load
+        document.getElementById('centerNumber').focus();
 
         // Initial summary update
         updateSummary();
