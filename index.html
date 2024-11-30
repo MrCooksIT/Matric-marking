@@ -3,226 +3,320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paper Tally Counter</title>
+    <title>Paper Counter</title>
     <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --primary-color: #4CAF50;
+            --secondary-color: #ff9800;
+            --border-color: #404040;
+            --input-bg: #333333;
+        }
+        
         body {
             font-family: Arial, sans-serif;
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background-color: var(--bg-color);
+            color: var(--text-color);
         }
+        
         .container {
-            background-color: white;
+            background-color: var(--card-bg);
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
+        
         .center-input {
-            width: 100%;
-            padding: 15px;
+            width: calc(100% - 30px);
+            padding: 12px;
             margin: 10px 0;
-            border: 2px solid #4CAF50;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
             font-size: 18px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
         }
-        .tally-area {
-            min-height: 200px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            margin: 20px 0;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 24px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-        .tally-button {
+        
+        .button {
             width: 100%;
-            padding: 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 20px;
-            cursor: pointer;
-            margin: 10px 0;
-        }
-        .undo-button {
-            width: 100%;
-            padding: 15px;
-            background-color: #ff9800;
-            color: white;
+            padding: 12px;
+            margin: 5px 0;
             border: none;
             border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
         }
+        
+        .button:active {
+            opacity: 0.8;
+        }
+        
+        .primary-button {
+            background-color: var(--primary-color);
+        }
+        
+        .secondary-button {
+            background-color: var(--secondary-color);
+        }
+        
+        .export-button {
+            background-color: #2196F3;
+        }
+        
         .count-display {
             text-align: center;
-            font-size: 24px;
+            font-size: 48px;
             margin: 20px 0;
+            font-weight: bold;
+            color: var(--primary-color);
         }
+        
         .center-header {
-            font-size: 20px;
+            font-size: 18px;
             margin: 10px 0;
-            text-align: center;
+            color: #888;
         }
+        
         .tabs {
             display: flex;
             margin-bottom: 20px;
+            background-color: var(--input-bg);
+            border-radius: 5px;
+            padding: 3px;
         }
+        
         .tab {
             flex: 1;
-            padding: 15px;
+            padding: 10px;
             text-align: center;
-            background-color: #ddd;
             cursor: pointer;
+            border-radius: 3px;
+            transition: background-color 0.3s;
         }
+        
         .tab.active {
-            background-color: #4CAF50;
+            background-color: var(--primary-color);
             color: white;
         }
+        
         .tab-content {
             display: none;
         }
+        
         .tab-content.active {
             display: block;
         }
+        
         .summary {
             margin-top: 20px;
             padding: 15px;
-            background-color: #e8f5e9;
+            background-color: var(--input-bg);
             border-radius: 5px;
+        }
+        
+        .backup-restore {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: var(--input-bg);
+            border-radius: 5px;
+        }
+        
+        #backupFile {
+            margin: 10px 0;
+            color: var(--text-color);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background-color: var(--input-bg);
+            color: var(--text-color);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Paper Tally Counter</h1>
+        <h1>Paper Counter</h1>
         
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('tally')">Tally</div>
+            <div class="tab active" onclick="switchTab('counter')">Counter</div>
             <div class="tab" onclick="switchTab('summary')">Summary</div>
+            <div class="tab" onclick="switchTab('data')">Data</div>
         </div>
 
-        <div id="tally" class="tab-content active">
-            <input type="text" id="centerNumber" class="center-input" placeholder="Enter Center Number">
+        <div id="counter" class="tab-content active">
+            <div class="center-header">Center Number</div>
+            <input type="number" 
+                   id="centerNumber" 
+                   class="center-input" 
+                   placeholder="Enter center number"
+                   pattern="[0-9]*"
+                   inputmode="numeric">
             
-            <div id="activeTally" style="display: none;">
-                <div class="center-header">Center: <span id="currentCenter"></span></div>
-                <div class="tally-area" id="tallyMarks"></div>
-                <div class="count-display">Count: <span id="tallyCount">0</span></div>
-                <button class="tally-button" onclick="addTally()">Add Tally</button>
-                <button class="undo-button" onclick="undoTally()">Undo Last Tally</button>
+            <div id="activeCounter">
+                <div class="count-display" id="currentCount">0</div>
+                <button class="button primary-button" onclick="incrementCount()">Count Paper (+1)</button>
+                <button class="button secondary-button" onclick="undoCount()">Undo (-1)</button>
+                <button class="button primary-button" onclick="submitAndNew()" style="margin-top: 20px;">Submit & New Center</button>
             </div>
         </div>
 
         <div id="summary" class="tab-content">
+            <h2>Today's Summary</h2>
             <div id="todaySummary" class="summary"></div>
+        </div>
+
+        <div id="data" class="tab-content">
+            <h2>Data Management</h2>
+            
+            <div class="backup-restore">
+                <h3>Export Data</h3>
+                <button class="button export-button" onclick="exportToCSV()">Download as CSV</button>
+                <button class="button export-button" onclick="exportBackup()">Download Backup</button>
+            </div>
+
+            <div class="backup-restore">
+                <h3>Restore Data</h3>
+                <input type="file" id="backupFile" accept=".json">
+                <button class="button primary-button" onclick="restoreBackup()">Restore from Backup</button>
+            </div>
         </div>
     </div>
 
     <script>
-        let tallies = JSON.parse(localStorage.getItem('tallyMarks')) || {};
-        let currentCenter = '';
-        
-        document.getElementById('centerNumber').addEventListener('change', function() {
-            const center = this.value.trim();
-            if (center) {
-                currentCenter = center;
-                document.getElementById('currentCenter').textContent = center;
-                document.getElementById('activeTally').style.display = 'block';
-                updateTallyDisplay();
-            }
-        });
+        let counts = JSON.parse(localStorage.getItem('paperCounts')) || {};
+        let currentCount = 0;
 
-        function getTallyString(count) {
-            const fullGroups = Math.floor(count / 5);
-            const remainder = count % 5;
-            
-            let tallyStr = '';
-            // Add groups of 5
-            for (let i = 0; i < fullGroups; i++) {
-                tallyStr += '||||⟋ ';
-            }
-            // Add remaining lines
-            for (let i = 0; i < remainder; i++) {
-                tallyStr += '|';
-            }
-            return tallyStr;
+        function incrementCount() {
+            currentCount++;
+            updateDisplay();
+            if (navigator.vibrate) navigator.vibrate(50);
         }
 
-        function addTally() {
-            if (!currentCenter) return;
-            
+        function undoCount() {
+            if (currentCount > 0) {
+                currentCount--;
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentCount').textContent = currentCount;
+        }
+
+        function submitAndNew() {
+            const centerNumber = document.getElementById('centerNumber').value.trim();
+            if (!centerNumber) {
+                alert('Please enter a center number');
+                return;
+            }
+
             const today = new Date().toISOString().split('T')[0];
-            if (!tallies[today]) {
-                tallies[today] = {};
-            }
-            if (!tallies[today][currentCenter]) {
-                tallies[today][currentCenter] = 0;
-            }
+            if (!counts[today]) counts[today] = {};
             
-            tallies[today][currentCenter]++;
-            localStorage.setItem('tallyMarks', JSON.stringify(tallies));
+            // Add to any existing count for this center today
+            counts[today][centerNumber] = (counts[today][centerNumber] || 0) + currentCount;
             
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-            }
+            localStorage.setItem('paperCounts', JSON.stringify(counts));
             
-            updateTallyDisplay();
+            // Reset for new entry
+            currentCount = 0;
+            document.getElementById('centerNumber').value = '';
+            document.getElementById('centerNumber').focus();
+            updateDisplay();
             updateSummary();
-        }
-
-        function undoTally() {
-            if (!currentCenter) return;
-            
-            const today = new Date().toISOString().split('T')[0];
-            if (tallies[today]?.[currentCenter] > 0) {
-                tallies[today][currentCenter]--;
-                localStorage.setItem('tallyMarks', JSON.stringify(tallies));
-                updateTallyDisplay();
-                updateSummary();
-            }
-        }
-
-        function updateTallyDisplay() {
-            const today = new Date().toISOString().split('T')[0];
-            const count = tallies[today]?.[currentCenter] || 0;
-            
-            document.getElementById('tallyMarks').textContent = getTallyString(count);
-            document.getElementById('tallyCount').textContent = count;
         }
 
         function updateSummary() {
             const today = new Date().toISOString().split('T')[0];
-            const todayTallies = tallies[today] || {};
+            const todayCounts = counts[today] || {};
             
-            let summaryHtml = '<h2>Today\'s Summary</h2>';
             let totalPapers = 0;
+            let tableHtml = '<table><tr><th>Center</th><th>Papers</th></tr>';
             
-            for (const center in todayTallies) {
-                const count = todayTallies[center];
+            Object.entries(todayCounts).forEach(([center, count]) => {
                 totalPapers += count;
-                summaryHtml += `
-                    <div style="margin: 10px 0">
-                        <strong>Center ${center}:</strong><br>
-                        ${getTallyString(count)}<br>
-                        Count: ${count}
-                    </div>
-                `;
+                tableHtml += `<tr><td>${center}</td><td>${count}</td></tr>`;
+            });
+            
+            tableHtml += '</table>';
+            
+            document.getElementById('todaySummary').innerHTML = `
+                <div style="margin-bottom: 15px">
+                    <strong>Total papers marked today:</strong> ${totalPapers}<br>
+                    <strong>Centers marked:</strong> ${Object.keys(todayCounts).length}
+                </div>
+                ${tableHtml}
+            `;
+        }
+
+        function exportToCSV() {
+            let csvContent = "Date,Center,Papers Marked\n";
+            
+            for (const date in counts) {
+                for (const center in counts[date]) {
+                    csvContent += `${date},${center},${counts[date][center]}\n`;
+                }
             }
             
-            summaryHtml += `
-                <div style="margin-top: 20px">
-                    <strong>Total papers marked today:</strong> ${totalPapers}<br>
-                    <strong>Centers marked:</strong> ${Object.keys(todayTallies).length}
-                </div>
-            `;
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `paper-count-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function exportBackup() {
+            const backup = JSON.stringify(counts, null, 2);
+            const blob = new Blob([backup], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `paper-count-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function restoreBackup() {
+            const fileInput = document.getElementById('backupFile');
+            const file = fileInput.files[0];
             
-            document.getElementById('todaySummary').innerHTML = summaryHtml;
+            if (!file) {
+                alert('Please select a backup file first');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    counts = JSON.parse(e.target.result);
+                    localStorage.setItem('paperCounts', JSON.stringify(counts));
+                    alert('Backup restored successfully!');
+                    updateSummary();
+                } catch (error) {
+                    alert('Error restoring backup. Please make sure the file is valid.');
+                }
+            };
+            reader.readAsText(file);
         }
 
         function switchTab(tabId) {
@@ -233,7 +327,9 @@
                 tab.classList.remove('active');
             });
             document.getElementById(tabId).classList.add('active');
-            document.querySelector(`.tab:nth-child(${tabId === 'tally' ? 1 : 2})`).classList.add('active');
+            document.querySelector(`.tab:nth-child(${
+                tabId === 'counter' ? 1 : tabId === 'summary' ? 2 : 3
+            })`).classList.add('active');
             
             if (tabId === 'summary') {
                 updateSummary();
