@@ -5,49 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paper Counter</title>
     <style>
-        /* Previous styles remain the same */
         :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
             --text-color: #ffffff;
             --primary-color: #4CAF50;
             --secondary-color: #ff9800;
-            --delete-color: #dc3545;
-            --border-color: #333333;
-            --input-bg: #2d2d2d;
+            --danger-color: #ff4444;
+            --border-color: #404040;
+            --input-bg: #333333;
+            --success-color: #00C851;
         }
         
-        /* ... (previous styles) ... */
-        .delete-button {
-            background-color: var(--delete-color);
-            border: none;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
-        .delete-button:hover {
-            opacity: 1;
-        }
-
-        .clear-all-button {
-            background-color: var(--delete-color);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        /* Include all previous styles here */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 400px;
+            font-family: Arial, sans-serif;
+            max-width: 600px;
             margin: 0 auto;
             padding: 20px;
             background-color: var(--bg-color);
@@ -57,85 +29,103 @@
         .container {
             background-color: var(--card-bg);
             padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
-        .input-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         
         .center-input {
-            width: 120px;
-            padding: 8px 12px;
+            width: calc(100% - 30px);
+            padding: 12px;
+            margin: 10px 0;
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 16px;
+            border-radius: 5px;
+            font-size: 18px;
             background-color: var(--input-bg);
             color: var(--text-color);
         }
         
         .button {
-            padding: 8px 16px;
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
             border: none;
-            border-radius: 6px;
+            border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
             color: white;
-            transition: opacity 0.2s;
+            transition: all 0.2s ease;
         }
         
         .button:active {
             opacity: 0.8;
+            transform: scale(0.98);
         }
         
         .primary-button {
             background-color: var(--primary-color);
-            width: 100%;
-            padding: 12px;
-            margin: 5px 0;
         }
         
         .secondary-button {
             background-color: var(--secondary-color);
-            width: 100%;
-            padding: 12px;
-            margin: 5px 0;
+        }
+        
+        .export-button {
+            background-color: #2196F3;
+        }
+
+        .delete-button {
+            background-color: var(--danger-color);
+            padding: 6px 12px;
+            width: auto;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .delete-button:hover {
+            opacity: 1;
+        }
+
+        .clear-all-button {
+            background-color: var(--danger-color);
+            width: auto;
+            float: right;
+            margin-bottom: 15px;
         }
         
         .count-display {
             text-align: center;
-            font-size: 64px;
+            font-size: 48px;
             margin: 20px 0;
             font-weight: bold;
             color: var(--primary-color);
-            font-variant-numeric: tabular-nums;
+            transition: color 0.3s ease;
+        }
+
+        .count-display.pulse {
+            color: var(--success-color);
         }
         
-        .center-label {
+        .center-header {
+            font-size: 18px;
+            margin: 10px 0;
             color: #888;
-            font-size: 14px;
-            margin-bottom: 4px;
         }
         
         .tabs {
             display: flex;
             margin-bottom: 20px;
             background-color: var(--input-bg);
-            border-radius: 6px;
+            border-radius: 5px;
             padding: 3px;
         }
         
         .tab {
             flex: 1;
-            padding: 8px;
+            padding: 10px;
             text-align: center;
             cursor: pointer;
-            border-radius: 4px;
-            font-size: 14px;
+            border-radius: 3px;
+            transition: background-color 0.3s;
         }
         
         .tab.active {
@@ -151,59 +141,121 @@
             display: block;
         }
         
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--input-bg);
+            border-radius: 5px;
+        }
+        
+        .backup-restore {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: var(--input-bg);
+            border-radius: 5px;
+        }
+        
+        #backupFile {
+            margin: 10px 0;
+            color: var(--text-color);
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
-            font-size: 14px;
         }
         
         th, td {
-            padding: 8px 12px;
+            padding: 12px;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
         }
         
-        .new-center-button {
-            background-color: var(--primary-color);
-            width: 100%;
-            padding: 12px;
-            margin-top: 20px;
-            font-weight: bold;
+        th {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        .success-message {
+            background-color: var(--success-color);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+            animation: fadeOut 2s forwards;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .stats-card {
+            background-color: var(--input-bg);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .total-count {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <h1>Paper Counter</h1>
+        
         <div class="tabs">
             <div class="tab active" onclick="switchTab('counter')">Counter</div>
             <div class="tab" onclick="switchTab('summary')">Summary</div>
+            <div class="tab" onclick="switchTab('data')">Data</div>
         </div>
 
         <div id="counter" class="tab-content active">
-            <div class="input-group">
-                <div>
-                    <div class="center-label">Center #</div>
-                    <input type="number" 
-                           id="centerNumber" 
-                           class="center-input" 
-                           placeholder="000"
-                           pattern="[0-9]*"
-                           inputmode="numeric">
-                </div>
-            </div>
+            <div class="center-header">Center Number</div>
+            <input type="number" 
+                   id="centerNumber" 
+                   class="center-input" 
+                   placeholder="Enter center number"
+                   pattern="[0-9]*"
+                   inputmode="numeric">
             
             <div id="activeCounter">
                 <div class="count-display" id="currentCount">0</div>
-                <button class="primary-button" onclick="incrementCount()">Count Paper (+1)</button>
-                <button class="secondary-button" onclick="undoCount()">Undo (-1)</button>
-                <button class="new-center-button" onclick="submitAndNew()">SUBMIT & NEW CENTER</button>
+                <button class="button primary-button" onclick="incrementCount()">Count Paper (+1)</button>
+                <button class="button secondary-button" onclick="undoCount()">Undo (-1)</button>
+                <button class="button primary-button" onclick="submitAndNew()" style="margin-top: 20px;">Submit & New Center</button>
             </div>
+            <div id="successMessage" class="success-message"></div>
         </div>
 
         <div id="summary" class="tab-content">
-            <button class="clear-all-button" onclick="clearAllData()">Clear All Today's Data</button>
-            <div id="todaySummary"></div>
+            <button class="button clear-all-button" onclick="clearAllData()">Clear All Today's Data</button>
+            <div class="stats-card">
+                <div id="todayStats"></div>
+            </div>
+            <div id="todaySummary" class="summary"></div>
+        </div>
+
+        <div id="data" class="tab-content">
+            <h2>Data Management</h2>
+            
+            <div class="backup-restore">
+                <h3>Export Data</h3>
+                <button class="button export-button" onclick="exportToCSV()">Download as CSV</button>
+                <button class="button export-button" onclick="exportBackup()">Download Backup</button>
+            </div>
+
+            <div class="backup-restore">
+                <h3>Restore Data</h3>
+                <input type="file" id="backupFile" accept=".json">
+                <button class="button primary-button" onclick="restoreBackup()">Restore from Backup</button>
+            </div>
         </div>
     </div>
 
@@ -215,17 +267,34 @@
             currentCount++;
             updateDisplay();
             if (navigator.vibrate) navigator.vibrate(50);
+            pulseCount();
+        }
+
+        function pulseCount() {
+            const display = document.getElementById('currentCount');
+            display.classList.add('pulse');
+            setTimeout(() => display.classList.remove('pulse'), 300);
         }
 
         function undoCount() {
             if (currentCount > 0) {
                 currentCount--;
                 updateDisplay();
+                if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
             }
         }
 
         function updateDisplay() {
             document.getElementById('currentCount').textContent = currentCount;
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 2000);
         }
 
         function submitAndNew() {
@@ -242,15 +311,18 @@
             
             localStorage.setItem('paperCounts', JSON.stringify(counts));
             
+            const savedCount = currentCount;
             currentCount = 0;
             document.getElementById('centerNumber').value = '';
             document.getElementById('centerNumber').focus();
             updateDisplay();
             updateSummary();
+            showSuccess(`Saved ${savedCount} papers for center ${centerNumber}`);
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
         }
 
         function deleteCenter(center) {
-            if (confirm(`Are you sure you want to delete center ${center}?`)) {
+            if (confirm(`Delete center ${center} and its count?`)) {
                 const today = new Date().toISOString().split('T')[0];
                 if (counts[today] && counts[today][center]) {
                     delete counts[today][center];
@@ -261,7 +333,7 @@
         }
 
         function clearAllData() {
-            if (confirm('Are you sure you want to clear all data for today?')) {
+            if (confirm('Clear all data for today? This cannot be undone.')) {
                 const today = new Date().toISOString().split('T')[0];
                 counts[today] = {};
                 localStorage.setItem('paperCounts', JSON.stringify(counts));
@@ -282,21 +354,72 @@
                     <tr>
                         <td>${center}</td>
                         <td>${count}</td>
-                        <td>
-                            <button class="delete-button" onclick="deleteCenter('${center}')">Delete</button>
+                        <td style="text-align: right">
+                            <button class="button delete-button" onclick="deleteCenter('${center}')">Delete</button>
                         </td>
                     </tr>`;
             });
             
             tableHtml += '</table>';
             
-            document.getElementById('todaySummary').innerHTML = `
-                <div style="margin-bottom: 15px">
-                    <strong>Total papers:</strong> ${totalPapers}<br>
-                    <strong>Centers:</strong> ${Object.keys(todayCounts).length}
-                </div>
-                ${tableHtml}
+            document.getElementById('todayStats').innerHTML = `
+                <div class="total-count">Total Papers: ${totalPapers}</div>
+                <div>Centers Marked: ${Object.keys(todayCounts).length}</div>
             `;
+            
+            document.getElementById('todaySummary').innerHTML = tableHtml;
+        }
+
+        function exportToCSV() {
+            let csvContent = "Date,Center,Papers Marked\n";
+            
+            for (const date in counts) {
+                for (const center in counts[date]) {
+                    csvContent += `${date},${center},${counts[date][center]}\n`;
+                }
+            }
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `paper-count-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function exportBackup() {
+            const backup = JSON.stringify(counts, null, 2);
+            const blob = new Blob([backup], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `paper-count-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function restoreBackup() {
+            const fileInput = document.getElementById('backupFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a backup file first');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    counts = JSON.parse(e.target.result);
+                    localStorage.setItem('paperCounts', JSON.stringify(counts));
+                    alert('Backup restored successfully!');
+                    updateSummary();
+                } catch (error) {
+                    alert('Error restoring backup. Please make sure the file is valid.');
+                }
+            };
+            reader.readAsText(file);
         }
 
         function switchTab(tabId) {
@@ -307,7 +430,9 @@
                 tab.classList.remove('active');
             });
             document.getElementById(tabId).classList.add('active');
-            document.querySelector(`.tab:nth-child(${tabId === 'counter' ? 1 : 2})`).classList.add('active');
+            document.querySelector(`.tab:nth-child(${
+                tabId === 'counter' ? 1 : tabId === 'summary' ? 2 : 3
+            })`).classList.add('active');
             
             if (tabId === 'summary') {
                 updateSummary();
