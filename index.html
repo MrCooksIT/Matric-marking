@@ -5,16 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paper Counter</title>
     <style>
+        /* Previous styles remain the same */
         :root {
             --bg-color: #121212;
             --card-bg: #1e1e1e;
             --text-color: #ffffff;
             --primary-color: #4CAF50;
             --secondary-color: #ff9800;
+            --delete-color: #dc3545;
             --border-color: #333333;
             --input-bg: #2d2d2d;
         }
         
+        /* ... (previous styles) ... */
+        .delete-button {
+            background-color: var(--delete-color);
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .delete-button:hover {
+            opacity: 1;
+        }
+
+        .clear-all-button {
+            background-color: var(--delete-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* Include all previous styles here */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             max-width: 400px;
@@ -172,6 +202,7 @@
         </div>
 
         <div id="summary" class="tab-content">
+            <button class="clear-all-button" onclick="clearAllData()">Clear All Today's Data</button>
             <div id="todaySummary"></div>
         </div>
     </div>
@@ -218,16 +249,43 @@
             updateSummary();
         }
 
+        function deleteCenter(center) {
+            if (confirm(`Are you sure you want to delete center ${center}?`)) {
+                const today = new Date().toISOString().split('T')[0];
+                if (counts[today] && counts[today][center]) {
+                    delete counts[today][center];
+                    localStorage.setItem('paperCounts', JSON.stringify(counts));
+                    updateSummary();
+                }
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all data for today?')) {
+                const today = new Date().toISOString().split('T')[0];
+                counts[today] = {};
+                localStorage.setItem('paperCounts', JSON.stringify(counts));
+                updateSummary();
+            }
+        }
+
         function updateSummary() {
             const today = new Date().toISOString().split('T')[0];
             const todayCounts = counts[today] || {};
             
             let totalPapers = 0;
-            let tableHtml = '<table><tr><th>Center</th><th>Papers</th></tr>';
+            let tableHtml = '<table><tr><th>Center</th><th>Papers</th><th>Action</th></tr>';
             
             Object.entries(todayCounts).forEach(([center, count]) => {
                 totalPapers += count;
-                tableHtml += `<tr><td>${center}</td><td>${count}</td></tr>`;
+                tableHtml += `
+                    <tr>
+                        <td>${center}</td>
+                        <td>${count}</td>
+                        <td>
+                            <button class="delete-button" onclick="deleteCenter('${center}')">Delete</button>
+                        </td>
+                    </tr>`;
             });
             
             tableHtml += '</table>';
