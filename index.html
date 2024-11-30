@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matric Marker Tracking</title>
+    <title>Matric Marker Tally</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
         body {
@@ -19,25 +19,41 @@
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .input-group {
-            margin-bottom: 15px;
-        }
-        input, button {
+        .center-input {
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #4CAF50;
             border-radius: 5px;
+            font-size: 18px;
             box-sizing: border-box;
         }
-        button {
+        .tally-button {
+            width: 100%;
+            height: 150px;
+            margin: 20px 0;
             background-color: #4CAF50;
             color: white;
             border: none;
+            border-radius: 10px;
+            font-size: 24px;
             cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
         }
-        button:hover {
+        .tally-button:active {
             background-color: #45a049;
+            transform: scale(0.98);
+        }
+        .count-display {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+        .center-label {
+            font-size: 18px;
         }
         .tabs {
             display: flex;
@@ -45,10 +61,11 @@
         }
         .tab {
             flex: 1;
-            padding: 10px;
+            padding: 15px;
             text-align: center;
             background-color: #ddd;
             cursor: pointer;
+            border-radius: 5px 5px 0 0;
         }
         .tab.active {
             background-color: #4CAF50;
@@ -60,6 +77,13 @@
         .tab-content.active {
             display: block;
         }
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+            font-size: 16px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -67,196 +91,174 @@
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px;
             text-align: left;
         }
         th {
             background-color: #4CAF50;
             color: white;
         }
-        .summary {
-            margin-top: 20px;
+        .undo-button {
+            width: 100%;
             padding: 10px;
-            background-color: #e8f5e9;
+            background-color: #ff9800;
+            color: white;
+            border: none;
             border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Matric Marker Tracking</h1>
+        <h1>Matric Marker Tally</h1>
         
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('entry')">Entry</div>
-            <div class="tab" onclick="switchTab('daily')">Daily Summary</div>
-            <div class="tab" onclick="switchTab('total')">Total Summary</div>
+            <div class="tab active" onclick="switchTab('counter')">Counter</div>
+            <div class="tab" onclick="switchTab('summary')">Summary</div>
         </div>
 
-        <div id="entry" class="tab-content active">
-            <div class="input-group">
-                <input type="text" id="centerNumber" placeholder="Center Number">
-                <input type="number" id="paperCount" placeholder="Number of Papers">
-                <button onclick="addEntry()">Add Entry</button>
+        <div id="counter" class="tab-content active">
+            <input type="text" id="centerNumber" class="center-input" placeholder="Enter Center Number">
+            
+            <div id="activeCounter" style="display: none;">
+                <button class="tally-button" onclick="incrementCount()">
+                    <div class="count-display">0</div>
+                    <div class="center-label">Center: <span id="currentCenter"></span></div>
+                    <div>Tap to count paper</div>
+                </button>
+                <button class="undo-button" onclick="undoLastCount()">Undo Last Count</button>
             </div>
         </div>
 
-        <div id="daily" class="tab-content">
-            <h2>Today's Entries</h2>
-            <div id="dailyData"></div>
-            <div class="summary" id="dailySummary"></div>
-            <canvas id="dailyChart"></canvas>
-        </div>
-
-        <div id="total" class="tab-content">
-            <h2>Total Summary</h2>
-            <div id="totalData"></div>
-            <div class="summary" id="totalSummary"></div>
-            <canvas id="totalChart"></canvas>
+        <div id="summary" class="tab-content">
+            <h2>Today's Summary</h2>
+            <div id="todaySummary" class="summary"></div>
+            <div id="todayData"></div>
+            <canvas id="todayChart"></canvas>
         </div>
     </div>
 
     <script>
         let entries = JSON.parse(localStorage.getItem('markerEntries')) || [];
+        let currentCenter = '';
+        let currentCount = 0;
 
-        function addEntry() {
-            const centerNumber = document.getElementById('centerNumber').value;
-            const paperCount = parseInt(document.getElementById('paperCount').value);
-
-            if (!centerNumber || !paperCount) {
-                alert('Please fill in all fields');
-                return;
+        document.getElementById('centerNumber').addEventListener('change', function() {
+            const center = this.value.trim();
+            if (center) {
+                currentCenter = center;
+                currentCount = getTodayCount(center);
+                document.getElementById('currentCenter').textContent = center;
+                document.querySelector('.count-display').textContent = currentCount;
+                document.getElementById('activeCounter').style.display = 'block';
             }
+        });
+
+        function getTodayCount(center) {
+            const today = new Date().toISOString().split('T')[0];
+            return entries
+                .filter(e => e.date === today && e.centerNumber === center)
+                .reduce((sum, e) => sum + 1, 0);
+        }
+
+        function incrementCount() {
+            if (!currentCenter) return;
 
             const entry = {
                 date: new Date().toISOString().split('T')[0],
-                centerNumber,
-                paperCount,
+                centerNumber: currentCenter,
                 timestamp: new Date().getTime()
             };
 
             entries.push(entry);
             localStorage.setItem('markerEntries', JSON.stringify(entries));
+            
+            currentCount++;
+            document.querySelector('.count-display').textContent = currentCount;
+            
+            // Vibrate for feedback if supported
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
 
-            document.getElementById('centerNumber').value = '';
-            document.getElementById('paperCount').value = '';
-
-            updateDisplays();
+            updateSummary();
         }
 
-        function updateDisplays() {
-            updateDailyDisplay();
-            updateTotalDisplay();
+        function undoLastCount() {
+            if (!currentCenter) return;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const lastEntryIndex = entries.findLastIndex(e => 
+                e.date === today && e.centerNumber === currentCenter
+            );
+
+            if (lastEntryIndex !== -1) {
+                entries.splice(lastEntryIndex, 1);
+                localStorage.setItem('markerEntries', JSON.stringify(entries));
+                currentCount--;
+                document.querySelector('.count-display').textContent = currentCount;
+                updateSummary();
+            }
         }
 
-        function updateDailyDisplay() {
+        function updateSummary() {
             const today = new Date().toISOString().split('T')[0];
             const todayEntries = entries.filter(entry => entry.date === today);
-
-            const dailyHtml = generateTableHtml(todayEntries);
-            document.getElementById('dailyData').innerHTML = dailyHtml;
-
-            const totalPapers = todayEntries.reduce((sum, entry) => sum + entry.paperCount, 0);
-            document.getElementById('dailySummary').innerHTML = `
-                Total papers marked today: ${totalPapers}<br>
-                Number of centers: ${new Set(todayEntries.map(e => e.centerNumber)).size}
-            `;
-
-            updateDailyChart(todayEntries);
-        }
-
-        function updateTotalDisplay() {
-            const totalHtml = generateTableHtml(entries);
-            document.getElementById('totalData').innerHTML = totalHtml;
-
-            const totalPapers = entries.reduce((sum, entry) => sum + entry.paperCount, 0);
-            const totalDays = new Set(entries.map(e => e.date)).size;
-            document.getElementById('totalSummary').innerHTML = `
-                Total papers marked: ${totalPapers}<br>
-                Total days: ${totalDays}<br>
-                Average papers per day: ${(totalPapers / totalDays).toFixed(2)}
-            `;
-
-            updateTotalChart(entries);
-        }
-
-        function generateTableHtml(data) {
-            if (data.length === 0) return '<p>No entries yet</p>';
-
-            return `
-                <table>
-                    <tr>
-                        <th>Date</th>
-                        <th>Center</th>
-                        <th>Papers</th>
-                    </tr>
-                    ${data.map(entry => `
-                        <tr>
-                            <td>${entry.date}</td>
-                            <td>${entry.centerNumber}</td>
-                            <td>${entry.paperCount}</td>
-                        </tr>
-                    `).join('')}
-                </table>
-            `;
-        }
-
-        function updateDailyChart(todayEntries) {
-            const ctx = document.getElementById('dailyChart').getContext('2d');
-            const centerData = {};
-
+            
+            const centerCounts = {};
             todayEntries.forEach(entry => {
-                if (!centerData[entry.centerNumber]) {
-                    centerData[entry.centerNumber] = 0;
-                }
-                centerData[entry.centerNumber] += entry.paperCount;
+                centerCounts[entry.centerNumber] = (centerCounts[entry.centerNumber] || 0) + 1;
             });
 
+            const totalPapers = todayEntries.length;
+            const totalCenters = Object.keys(centerCounts).length;
+
+            document.getElementById('todaySummary').innerHTML = `
+                <strong>Total papers marked today:</strong> ${totalPapers}<br>
+                <strong>Number of centers:</strong> ${totalCenters}<br>
+                <strong>Average per center:</strong> ${totalCenters ? (totalPapers / totalCenters).toFixed(1) : 0}
+            `;
+
+            // Generate table
+            const tableHtml = Object.entries(centerCounts).length ? `
+                <table>
+                    <tr>
+                        <th>Center</th>
+                        <th>Papers Marked</th>
+                    </tr>
+                    ${Object.entries(centerCounts)
+                        .map(([center, count]) => `
+                            <tr>
+                                <td>${center}</td>
+                                <td>${count}</td>
+                            </tr>
+                        `).join('')}
+                </table>
+            ` : '<p>No papers marked yet today</p>';
+
+            document.getElementById('todayData').innerHTML = tableHtml;
+
+            // Update chart
+            const ctx = document.getElementById('todayChart').getContext('2d');
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(centerData),
+                    labels: Object.keys(centerCounts),
                     datasets: [{
-                        label: 'Papers per Center Today',
-                        data: Object.values(centerData),
+                        label: 'Papers Marked Today',
+                        data: Object.values(centerCounts),
                         backgroundColor: '#4CAF50'
                     }]
                 },
                 options: {
                     scales: {
                         y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
-        function updateTotalChart(allEntries) {
-            const ctx = document.getElementById('totalChart').getContext('2d');
-            const dailyTotals = {};
-
-            allEntries.forEach(entry => {
-                if (!dailyTotals[entry.date]) {
-                    dailyTotals[entry.date] = 0;
-                }
-                dailyTotals[entry.date] += entry.paperCount;
-            });
-
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Object.keys(dailyTotals).sort(),
-                    datasets: [{
-                        label: 'Papers per Day',
-                        data: Object.keys(dailyTotals).sort().map(date => dailyTotals[date]),
-                        borderColor: '#4CAF50',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
                         }
                     }
                 }
@@ -271,14 +273,15 @@
                 tab.classList.remove('active');
             });
             document.getElementById(tabId).classList.add('active');
-            document.querySelector(`.tab:nth-child(${
-                tabId === 'entry' ? 1 : tabId === 'daily' ? 2 : 3
-            })`).classList.add('active');
-            updateDisplays();
+            document.querySelector(`.tab:nth-child(${tabId === 'counter' ? 1 : 2})`).classList.add('active');
+            
+            if (tabId === 'summary') {
+                updateSummary();
+            }
         }
 
-        // Initial display update
-        updateDisplays();
+        // Initial summary update
+        updateSummary();
     </script>
 </body>
 </html>
