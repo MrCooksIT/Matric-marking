@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matric Marker Tracking</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background-color: #ddd;
+            cursor: pointer;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .summary {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Matric Marker Tracking</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('entry')">Entry</div>
+            <div class="tab" onclick="switchTab('daily')">Daily Summary</div>
+            <div class="tab" onclick="switchTab('total')">Total Summary</div>
+        </div>
+
+        <div id="entry" class="tab-content active">
+            <div class="input-group">
+                <input type="text" id="centerNumber" placeholder="Center Number">
+                <input type="number" id="paperCount" placeholder="Number of Papers">
+                <button onclick="addEntry()">Add Entry</button>
+            </div>
+        </div>
+
+        <div id="daily" class="tab-content">
+            <h2>Today's Entries</h2>
+            <div id="dailyData"></div>
+            <div class="summary" id="dailySummary"></div>
+            <canvas id="dailyChart"></canvas>
+        </div>
+
+        <div id="total" class="tab-content">
+            <h2>Total Summary</h2>
+            <div id="totalData"></div>
+            <div class="summary" id="totalSummary"></div>
+            <canvas id="totalChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let entries = JSON.parse(localStorage.getItem('markerEntries')) || [];
+
+        function addEntry() {
+            const centerNumber = document.getElementById('centerNumber').value;
+            const paperCount = parseInt(document.getElementById('paperCount').value);
+
+            if (!centerNumber || !paperCount) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const entry = {
+                date: new Date().toISOString().split('T')[0],
+                centerNumber,
+                paperCount,
+                timestamp: new Date().getTime()
+            };
+
+            entries.push(entry);
+            localStorage.setItem('markerEntries', JSON.stringify(entries));
+
+            document.getElementById('centerNumber').value = '';
+            document.getElementById('paperCount').value = '';
+
+            updateDisplays();
+        }
+
+        function updateDisplays() {
+            updateDailyDisplay();
+            updateTotalDisplay();
+        }
+
+        function updateDailyDisplay() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayEntries = entries.filter(entry => entry.date === today);
+
+            const dailyHtml = generateTableHtml(todayEntries);
+            document.getElementById('dailyData').innerHTML = dailyHtml;
+
+            const totalPapers = todayEntries.reduce((sum, entry) => sum + entry.paperCount, 0);
+            document.getElementById('dailySummary').innerHTML = `
+                Total papers marked today: ${totalPapers}<br>
+                Number of centers: ${new Set(todayEntries.map(e => e.centerNumber)).size}
+            `;
+
+            updateDailyChart(todayEntries);
+        }
+
+        function updateTotalDisplay() {
+            const totalHtml = generateTableHtml(entries);
+            document.getElementById('totalData').innerHTML = totalHtml;
+
+            const totalPapers = entries.reduce((sum, entry) => sum + entry.paperCount, 0);
+            const totalDays = new Set(entries.map(e => e.date)).size;
+            document.getElementById('totalSummary').innerHTML = `
+                Total papers marked: ${totalPapers}<br>
+                Total days: ${totalDays}<br>
+                Average papers per day: ${(totalPapers / totalDays).toFixed(2)}
+            `;
+
+            updateTotalChart(entries);
+        }
+
+        function generateTableHtml(data) {
+            if (data.length === 0) return '<p>No entries yet</p>';
+
+            return `
+                <table>
+                    <tr>
+                        <th>Date</th>
+                        <th>Center</th>
+                        <th>Papers</th>
+                    </tr>
+                    ${data.map(entry => `
+                        <tr>
+                            <td>${entry.date}</td>
+                            <td>${entry.centerNumber}</td>
+                            <td>${entry.paperCount}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            `;
+        }
+
+        function updateDailyChart(todayEntries) {
+            const ctx = document.getElementById('dailyChart').getContext('2d');
+            const centerData = {};
+
+            todayEntries.forEach(entry => {
+                if (!centerData[entry.centerNumber]) {
+                    centerData[entry.centerNumber] = 0;
+                }
+                centerData[entry.centerNumber] += entry.paperCount;
+            });
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(centerData),
+                    datasets: [{
+                        label: 'Papers per Center Today',
+                        data: Object.values(centerData),
+                        backgroundColor: '#4CAF50'
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTotalChart(allEntries) {
+            const ctx = document.getElementById('totalChart').getContext('2d');
+            const dailyTotals = {};
+
+            allEntries.forEach(entry => {
+                if (!dailyTotals[entry.date]) {
+                    dailyTotals[entry.date] = 0;
+                }
+                dailyTotals[entry.date] += entry.paperCount;
+            });
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(dailyTotals).sort(),
+                    datasets: [{
+                        label: 'Papers per Day',
+                        data: Object.keys(dailyTotals).sort().map(date => dailyTotals[date]),
+                        borderColor: '#4CAF50',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`.tab:nth-child(${
+                tabId === 'entry' ? 1 : tabId === 'daily' ? 2 : 3
+            })`).classList.add('active');
+            updateDisplays();
+        }
+
+        // Initial display update
+        updateDisplays();
+    </script>
+</body>
+</html>
